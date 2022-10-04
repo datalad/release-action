@@ -8,6 +8,7 @@ from typing import Any
 from ghrepo import GHRepo
 import requests
 from .config import Config
+from .versions import Bump
 
 log = logging.getLogger(__name__)
 
@@ -162,7 +163,7 @@ class Issue:
 @dataclass
 class PullRequest:
     title: str
-    number: str
+    number: int
     url: str
     author: Actor
     closed_issues: list[Issue]
@@ -173,6 +174,16 @@ class PullRequest:
             if cat.label is not None and cat.label in self.labels:
                 return cat.name
         sys.exit("Pull request lacks semver labels")
+
+    def get_bump(self, cfg: Config) -> Bump:
+        return max(
+            (
+                cat.bump
+                for cat in cfg.categories
+                if cat.label is not None and cat.label in self.labels
+            ),
+            default=Bump.PATCH,
+        )
 
     def as_link(self) -> str:
         return f"[PR #{self.number}]({self.url})"

@@ -1,20 +1,14 @@
 from __future__ import annotations
-from enum import Enum
 from pathlib import Path
 from typing import IO, List, Optional
 from pydantic import BaseModel, Field
 from ruamel.yaml import YAML
+from .versions import Bump
 
 
 class GitAuthor(BaseModel):
     name: str = "DataLad Bot"
     email: str = "bot@datalad.org"
-
-
-class Bump(Enum):
-    MAJOR = "major"
-    MINOR = "minor"
-    PATCH = "patch"
 
 
 class Category(BaseModel):

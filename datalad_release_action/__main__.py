@@ -6,8 +6,9 @@ import re
 from typing import IO
 import click
 from ghrepo import GHRepo
-from .client import Client
+from .client import Client, PullRequest
 from .config import Config
+from .versions import Bump, bump_version, get_highest_tag_version
 
 log = logging.getLogger(__name__)
 
@@ -50,17 +51,32 @@ def add_changelog_snippet(dra: DRA, prnum: int) -> None:
 
 
 @main.command()
-@click.argument("release_tag")
 @click.pass_obj
-def release(dra: DRA, release_tag: str) -> None:
+def release(dra: DRA) -> None:
+    bump = Bump.PATCH
+    prs: list[PullRequest] = []
     for p in dra.config.snippets_dir.iterdir():
-        if p.is_file() and p.suffix == ".md":
+        if p.is_file() and p.suffix in (".md", ".rst"):
             log.info("Processing snippet %s", p)
             m = re.fullmatch(r"pr-(\d+)(?:\.[a-z]+)?", p.name)
             if m:
-                dra.client.make_release_comments(release_tag, int(m[1]))
+                prnum = int(m[1])
+                log.info("Fetching data for PR #%d", prnum)
+                pr = dra.client.get_pr_info(prnum)
+                b = pr.get_bump(dra.config)
+                log.info("PR version bump level: %s", b.value)
+                if b > bump:
+                    bump = b
+                prs.append(pr)
             else:
                 log.warning("Cannot extract PR number from path %r", str(p))
+    log.info("Version bump level for this release: %s", bump.value)
+    prev_version = get_highest_tag_version()
+    log.info("Previous released version: %s", prev_version)
+    next_version = bump_version(prev_version, bump)
+    log.info("New version: %s", next_version)
+    for pr in prs:
+        dra.client.make_release_comments(next_version, pr.number)
 
 
 if __name__ == "__main__":
