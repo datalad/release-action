@@ -1,7 +1,3 @@
-git_author:
-  name: DataLad Bot
-  email: bot@datalad.org
-
 apt_depends: []
 pip_depends: []
 pre_tag: []

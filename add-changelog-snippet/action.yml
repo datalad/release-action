@@ -1,0 +1,53 @@
+name: Add changelog snippet
+
+inputs:
+  git-author-name:
+    default: "DataLad Bot"
+  git-author-email:
+    default: "bot@datalad.org"
+  token:
+    default: ${{ secrets.GITHUB_TOKEN }}
+  config:
+    default: ".datalad-release-action.yaml"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '^3.7'
+
+    - name: Install Python dependencies
+      run: python -m pip install --upgrade nox
+
+    - name: Generate changelog.d snippet
+      run: |
+        nox -f "$GITHUB_ACTION_PATH/../noxfile.py" -e run -- \
+          -c "$config" \
+          ${{ github.repository }} \
+          add-changelog-snippet \
+          ${{ github.event.pull_request.number }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        config: ${{ inputs.config }}
+
+    - name: Remove CHANGELOG-missing label
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+        labels: CHANGELOG-missing
+
+    - name: Commit
+      run: |
+        git add changelog.d
+        if ! git diff --quiet --cached
+        then git commit -m 'Autogenerate changelog.d snippet for pull request'
+             git push origin HEAD:${{ github.head_ref }}
+        else echo "No changes to commit"
+        fi
+      env:
+        GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
+        GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
+
+# vim:set et sts=2:

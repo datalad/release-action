@@ -1,14 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import IO, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from ruamel.yaml import YAML
 from .versions import Bump
-
-
-class GitAuthor(BaseModel):
-    name: str = "DataLad Bot"
-    email: str = "bot@datalad.org"
 
 
 class Category(BaseModel):
@@ -18,8 +13,6 @@ class Category(BaseModel):
 
 
 class Config(BaseModel):
-    git_author: GitAuthor = Field(default_factory=GitAuthor)
-
     ### apt_depends
     ### pip_depends
     ### pre_tag
