@@ -6,7 +6,7 @@ inputs:
   git-author-email:
     default: "bot@datalad.org"
   token:
-    default: ${{ secrets.GITHUB_TOKEN }}
+    required: true
   pypi-token:
     default: ""
   pre-tag:
