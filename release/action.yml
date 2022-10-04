@@ -39,7 +39,7 @@ runs:
       id: new-version
       run: |
         nox -f "$GITHUB_ACTION_PATH/../noxfile.py" -e run -- \
-          -c "$config" ${{ github.repository }} release
+          -c "$PWD/$config" ${{ github.repository }} release
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}

@@ -25,7 +25,7 @@ runs:
     - name: Generate changelog.d snippet
       run: |
         nox -f "$GITHUB_ACTION_PATH/../noxfile.py" -e run -- \
-          -c "$config" \
+          -c "$PWD/$config" \
           ${{ github.repository }} \
           add-changelog-snippet \
           ${{ github.event.pull_request.number }}
