@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 from enum import Enum
 from pathlib import Path
-from typing import List, IO, Optional
-
+from typing import IO, List, Optional
 from pydantic import BaseModel, Field
 from ruamel.yaml import YAML
 

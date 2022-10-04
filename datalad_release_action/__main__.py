@@ -1,13 +1,10 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
 import os
 from typing import IO
-
 import click
-
-from .config import Config
 from .client import Client
+from .config import Config
 
 
 @dataclass

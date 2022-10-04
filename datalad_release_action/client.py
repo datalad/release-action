@@ -1,11 +1,9 @@
 from __future__ import annotations
-
-from dataclasses import dataclass, InitVar, field
+from dataclasses import InitVar, dataclass, field
 import json
 import os
 import sys
 from typing import Any
-
 import requests
 from .config import Config
 
