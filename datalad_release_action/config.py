@@ -13,10 +13,6 @@ class Category(BaseModel):
 
 
 class Config(BaseModel):
-    ### apt_depends
-    ### pip_depends
-    ### pre_tag
-
     snippets_dir: Path = Path("changelog.d")
     categories: List[Category]
 

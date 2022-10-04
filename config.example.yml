@@ -1,7 +1,3 @@
-apt_depends: []
-pip_depends: []
-pre_tag: []
-
 snippets_dir: changelog.d
 
 # Categories must be listed in descending order of precedence for determining

@@ -77,6 +77,7 @@ def release(dra: DRA) -> None:
     log.info("New version: %s", next_version)
     for pr in prs:
         dra.client.make_release_comments(next_version, pr.number)
+    print(f"::set-output name=new-version::{next_version}")
 
 
 if __name__ == "__main__":
