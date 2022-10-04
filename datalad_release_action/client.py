@@ -4,8 +4,11 @@ import json
 import os
 import sys
 from typing import Any
+from ghrepo import GHRepo
 import requests
 from .config import Config
+
+GITHUB_API_URL = os.environ.get("GITHUB_API_URL", "https://api.github.com")
 
 GRAPHQL_API_URL = os.environ.get("GITHUB_GRAPHQL_URL", "https://api.github.com/graphql")
 
@@ -57,6 +60,7 @@ PR_INFO_QUERY = (
 
 @dataclass
 class Client:
+    repo: GHRepo
     token: InitVar[str]
     session: requests.Session = field(init=False)
 
@@ -70,10 +74,10 @@ class Client:
     def __exit__(self, *_exc: Any) -> None:
         self.session.close()
 
-    def get_pr_info(self, repo_owner: str, repo_name: str, prnum: int) -> PullRequest:
+    def get_pr_info(self, prnum: int) -> PullRequest:
         variables = {
-            "repo_owner": repo_owner,
-            "repo_name": repo_name,
+            "repo_owner": self.repo.owner,
+            "repo_name": self.repo.name,
             "prnum": prnum,
             "closing_cursor": None,
             "label_cursor": None,
@@ -112,6 +116,25 @@ class Client:
                     closed_issues=closed_issues,
                     labels=labels,
                 )
+
+    def make_release_comments(self, release_tag: str, prnum: int) -> None:
+        release_link = (
+            f"[`{release_tag}`](https://github.com/{self.repo.owner}"
+            f"/{self.repo.name}/releases/tag/{release_tag})"
+        )
+        self.comment_on_issueoid(prnum, f"PR released in {release_link}")
+        pr = self.get_pr_info(prnum)
+        for issue in pr.closed_issues:
+            print(f" commenting on issue {issue}")
+            self.comment_on_issueoid(issue, f"Issue fixed in {release_link}")
+
+    def comment_on_issueoid(self, num: int, body: str) -> None:
+        r = self.session.post(
+            f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/issues/{num}/comments",
+            json={"body": body},
+            headers={"Accept": "application/vnd.github+json"},
+        )
+        r.raise_for_status()
 
 
 @dataclass
