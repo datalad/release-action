@@ -1,13 +1,15 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import logging
 import os
 import re
-import sys
 from typing import IO
 import click
 from ghrepo import GHRepo
 from .client import Client
 from .config import Config
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,6 +25,10 @@ class DRA:
 @click.argument("repo", type=GHRepo.parse)
 @click.pass_context
 def main(ctx: click.Context, config: IO[str], repo: GHRepo) -> None:
+    logging.basicConfig(
+        format="[%(levelname)-8s] %(message)s",
+        level=logging.INFO,
+    )
     cfg = Config.load_yaml(config)
     try:
         token = os.environ["GITHUB_TOKEN"]
@@ -40,7 +46,7 @@ def add_changelog_snippet(dra: DRA, prnum: int) -> None:
     dra.config.snippets_dir.mkdir(parents=True, exist_ok=True)
     outfile = dra.config.snippets_dir / f"pr-{prnum}.md"
     outfile.write_text(pr.as_snippet(dra.config))
-    print("Changelog snippet saved to", outfile)
+    log.info("Changelog snippet saved to %s", outfile)
 
 
 @main.command()
@@ -49,16 +55,12 @@ def add_changelog_snippet(dra: DRA, prnum: int) -> None:
 def release(dra: DRA, release_tag: str) -> None:
     for p in dra.config.snippets_dir.iterdir():
         if p.is_file() and p.suffix == ".md":
-            print("Processing", p)
+            log.info("Processing snippet %s", p)
             m = re.fullmatch(r"pr-(\d+)(?:\.[a-z]+)?", p.name)
             if m:
                 dra.client.make_release_comments(release_tag, int(m[1]))
             else:
-                print(
-                    "WARNING: Cannot extract PR number from path",
-                    repr(str(p)),
-                    file=sys.stderr,
-                )
+                log.warning("Cannot extract PR number from path %r", str(p))
 
 
 if __name__ == "__main__":

@@ -1,12 +1,15 @@
 from __future__ import annotations
 from dataclasses import InitVar, dataclass, field
 import json
+import logging
 import os
 import sys
 from typing import Any
 from ghrepo import GHRepo
 import requests
 from .config import Config
+
+log = logging.getLogger(__name__)
 
 GITHUB_API_URL = os.environ.get("GITHUB_API_URL", "https://api.github.com")
 
@@ -122,10 +125,11 @@ class Client:
             f"[`{release_tag}`](https://github.com/{self.repo.owner}"
             f"/{self.repo.name}/releases/tag/{release_tag})"
         )
+        log.info("Commenting on PR #%d", prnum)
         self.comment_on_issueoid(prnum, f"PR released in {release_link}")
         pr = self.get_pr_info(prnum)
         for issue in pr.closed_issues:
-            print(f" commenting on issue {issue}")
+            log.info("Commenting on issue #%d", issue)
             self.comment_on_issueoid(issue, f"Issue fixed in {release_link}")
 
     def comment_on_issueoid(self, num: int, body: str) -> None:
