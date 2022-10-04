@@ -1,0 +1,4 @@
+click >= 8.0
+pydantic ~= 1.9
+requests ~= 2.20
+ruamel.yaml ~= 0.15
