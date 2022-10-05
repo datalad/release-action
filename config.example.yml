@@ -1,4 +1,4 @@
-snippets_dir: changelog.d
+fragment_directory: changelog.d
 
 # Categories must be listed in descending order of precedence for determining
 # what category to apply to a PR with multiple labels.

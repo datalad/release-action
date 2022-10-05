@@ -13,7 +13,7 @@ class Category(BaseModel):
 
 
 class Config(BaseModel):
-    snippets_dir: Path = Path("changelog.d")
+    fragment_directory: Path = Path("changelog.d")
     categories: List[Category]
 
     @classmethod

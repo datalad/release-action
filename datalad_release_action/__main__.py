@@ -44,8 +44,8 @@ def main(ctx: click.Context, config: IO[str], repo: GHRepo) -> None:
 @click.pass_obj
 def add_changelog_snippet(dra: DRA, prnum: int) -> None:
     pr = dra.client.get_pr_info(prnum)
-    dra.config.snippets_dir.mkdir(parents=True, exist_ok=True)
-    outfile = dra.config.snippets_dir / f"pr-{prnum}.md"
+    dra.config.fragment_directory.mkdir(parents=True, exist_ok=True)
+    outfile = dra.config.fragment_directory / f"pr-{prnum}.md"
     outfile.write_text(pr.as_snippet(dra.config))
     log.info("Changelog snippet saved to %s", outfile)
 
@@ -55,7 +55,7 @@ def add_changelog_snippet(dra: DRA, prnum: int) -> None:
 def release(dra: DRA) -> None:
     bump = Bump.PATCH
     prs: list[PullRequest] = []
-    for p in dra.config.snippets_dir.iterdir():
+    for p in dra.config.fragment_directory.iterdir():
         if p.is_file() and p.suffix in (".md", ".rst"):
             log.info("Processing snippet %s", p)
             m = re.fullmatch(r"pr-(\d+)(?:\.[a-z]+)?", p.name)
