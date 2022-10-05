@@ -89,8 +89,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           rm-labels: CHANGELOG-missing
-
-# vim:set et sts=2:
 ```
 
 
