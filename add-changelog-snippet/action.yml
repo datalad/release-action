@@ -9,6 +9,8 @@ inputs:
     required: true
   config:
     default: ".datalad-release-action.yaml"
+  rm-labels:
+    default: ""
 
 runs:
   using: composite
@@ -38,10 +40,11 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
         config: ${{ inputs.config }}
 
-    - name: Remove CHANGELOG-missing label
+    - name: Remove labels
+      if: inputs.rm-labels != ''
       uses: actions-ecosystem/action-remove-labels@v1
       with:
-        labels: CHANGELOG-missing
+        labels: ${{ inputs.rm-labels }}
 
     - name: Commit
       run: |

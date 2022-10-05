@@ -40,6 +40,9 @@ category label.
     # See "Inputs" below
 ```
 
+The action will operate on the pull request identified by `${{
+github.event.pull_request.number }}`.
+
 ## Inputs
 
 | Key | Meaning | Default |
@@ -47,11 +50,48 @@ category label.
 | `config` | Path to the action configuration file | `.datalad-release-action.yaml` |
 | `git-author-email` | E-mail address to use when committing the changelog snippet | `bot@datalad.org` |
 | `git-author-name` | Name to use when committing the changelog snippet | `DataLad Bot` |
+| `rm-labels` | Names of labels (on separate lines) to remove from the pull request after generating the fragment | [empty] |
 | `token` | GitHub token to use for querying the GitHub API; just using `${{ secrets.GITHUB_TOKEN }}` is recommended | *(required)* |
 
 ## Sample Workflow Usage
 
-TODO
+```yaml
+name: Add changelog.d snippet
+
+on:
+  # This action should be run in workflows triggered by `pull_request_target`
+  # (not by regular `pull_request`!)
+  pull_request_target:
+    # Run whenever the PR is pushed to, receives a label, or is created with
+    # one or more labels:
+    types: [synchronize, labeled]
+
+# Prevent the workflow from running multiple jobs at once when a PR is created
+# with multiple labels:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    # Only run on PRs that have the "CHANGELOG-missing" label:
+    if: contains(github.event.pull_request.labels.*.name, 'CHANGELOG-missing')
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Add changelog snippet
+        uses: datalad/release-action/add-changelog-snippet@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          rm-labels: CHANGELOG-missing
+
+# vim:set et sts=2:
+```
 
 
 # Action: `release`
