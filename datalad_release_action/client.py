@@ -130,8 +130,8 @@ class Client:
         self.comment_on_issueoid(prnum, f"PR released in {release_link}")
         pr = self.get_pr_info(prnum)
         for issue in pr.closed_issues:
-            log.info("Commenting on issue #%d", issue)
-            self.comment_on_issueoid(issue, f"Issue fixed in {release_link}")
+            log.info("Commenting on issue #%d", issue.number)
+            self.comment_on_issueoid(issue.number, f"Issue fixed in {release_link}")
 
     def comment_on_issueoid(self, num: int, body: str) -> None:
         r = self.session.post(
