@@ -55,5 +55,7 @@ runs:
       env:
         GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
         GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
+        GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
 
 # vim:set et sts=2:
