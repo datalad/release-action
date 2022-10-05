@@ -18,14 +18,18 @@ runs:
       with:
         python-version: '^3.7'
 
-    - name: Install nox
-      run: python -m pip install --upgrade nox
-      shell: bash
-
     - name: Generate changelog.d snippet
+      # We can't use nox or tox, as those change the working dir to the folder
+      # containing the nox/tox-file, yet we need to remain in the same
+      # directory in which the action was invoked.
       run: |
-        nox -f "$GITHUB_ACTION_PATH/../noxfile.py" -e run -- \
-          -c "$PWD/$config" \
+        set -ex
+        python -m venv "$GITHUB_ACTION_PATH"/venv
+        source "$GITHUB_ACTION_PATH"/venv/bin/activate
+        pip install -r "$GITHUB_ACTION_PATH"/../requirements.txt
+        PYTHONPATH="$PYTHONPATH":"$GITHUB_ACTION_PATH"/.. \
+          python -m datalad_release_action \
+          -c "$config" \
           ${{ github.repository }} \
           add-changelog-snippet \
           ${{ github.event.pull_request.number }}

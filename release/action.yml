@@ -26,20 +26,26 @@ runs:
       with:
         python-version: '^3.7'
 
-    - name: Install nox
-      run: python -m pip install --upgrade nox
-      shell: bash
-
-    - name: Install build & twine
-      if: inputs.pypi-token != ''
-      run: python -m pip install build twine
+    - name: Install action-level Python dependencies
+      run: |
+        python -m venv "$GITHUB_ACTION_PATH"/infra
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
+        pip install build scriv twine
       shell: bash
 
     - name: Calculate new version and comment on PRs & issues
       id: new-version
+      # We can't use nox or tox, as those change the working dir to the folder
+      # containing the nox/tox-file, yet we need to remain in the same
+      # directory in which the action was invoked.
       run: |
-        nox -f "$GITHUB_ACTION_PATH/../noxfile.py" -e run -- \
-          -c "$PWD/$config" ${{ github.repository }} release
+        set -ex
+        python -m venv "$GITHUB_ACTION_PATH"/venv
+        source "$GITHUB_ACTION_PATH"/venv/bin/activate
+        pip install -r "$GITHUB_ACTION_PATH"/../requirements.txt
+        PYTHONPATH="$PYTHONPATH":"$GITHUB_ACTION_PATH"/.. \
+          python -m datalad_release_action \
+          -c "$config" ${{ github.repository }} release
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
@@ -47,6 +53,7 @@ runs:
 
     - name: Create new CHANGELOG section
       run: |
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
         scriv collect --add --version ${{ steps.new-version.outputs.new-version }}
         git commit -m '[skip ci] Update CHANGELOG'
       shell: bash
@@ -68,6 +75,7 @@ runs:
       run: |
         git tag -m "Update version to $new_version" "$new_version"
         git push --follow-tags
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
         scriv github-release
       shell: bash
       env:
@@ -79,6 +87,7 @@ runs:
     - name: Build and upload to PyPI
       if: inputs.pypi-token != ''
       run: |
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
         python -m build
         twine upload dist/*
       shell: bash
