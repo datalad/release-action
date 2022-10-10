@@ -1,0 +1,104 @@
+name: Prepare release
+
+inputs:
+  git-author-name:
+    default: "DataLad Bot"
+  git-author-email:
+    default: "bot@datalad.org"
+  token:
+    required: true
+  pypi-token:
+    default: ""
+  pre-tag:
+    default: ""
+  config:
+    default: ".datalad-release-action.yaml"
+
+outputs:
+  new-version:
+    value: ${{ steps.new-version.outputs.new-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '^3.7'
+
+    - name: Install action-level Python dependencies
+      run: |
+        python -m venv "$GITHUB_ACTION_PATH"/infra
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
+        pip install build scriv twine
+      shell: bash
+
+    - name: Calculate new version and comment on PRs & issues
+      id: new-version
+      # We can't use nox or tox, as those change the working dir to the folder
+      # containing the nox/tox-file, yet we need to remain in the same
+      # directory in which the action was invoked.
+      run: |
+        set -ex
+        python -m venv "$GITHUB_ACTION_PATH"/venv
+        source "$GITHUB_ACTION_PATH"/venv/bin/activate
+        pip install -r "$GITHUB_ACTION_PATH"/../requirements.txt
+        PYTHONPATH="$PYTHONPATH":"$GITHUB_ACTION_PATH"/.. \
+          python -m datalad_release_action \
+          -c "$config" ${{ github.repository }} release
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        config: ${{ inputs.config }}
+
+    - name: Create new CHANGELOG section
+      run: |
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
+        scriv collect --add --version ${{ steps.new-version.outputs.new-version }}
+        git commit -m '[skip ci] Update CHANGELOG'
+      shell: bash
+      env:
+        GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
+        GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
+        GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
+
+    - name: Run custom pre-tag step
+      if: inputs.pre-tag != ''
+      run: ${{ inputs.pre-tag }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
+        GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
+        GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
+        new_version: ${{ steps.new-version.outputs.new-version }}
+
+    - name: Create tag and release
+      run: |
+        git tag -m "Update version to $new_version" "$new_version"
+        git push --follow-tags
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
+        scriv github-release
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
+        GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
+        GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
+        new_version: ${{ steps.new-version.outputs.new-version }}
+
+    - name: Build and upload to PyPI
+      if: inputs.pypi-token != ''
+      run: |
+        source "$GITHUB_ACTION_PATH"/infra/bin/activate
+        python -m build
+        twine upload dist/*
+      shell: bash
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ inputs.pypi-token }}
+
+# vim:set sts=2:
