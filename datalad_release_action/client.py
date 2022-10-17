@@ -1,10 +1,11 @@
 from __future__ import annotations
+from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 import json
 import logging
 import os
 import sys
-from typing import Any
+from typing import Any, Optional
 from ghrepo import GHRepo
 import requests
 from .config import Config
@@ -120,6 +121,19 @@ class Client:
                     closed_issues=closed_issues,
                     labels=labels,
                 )
+
+    def get_pr_added_files(self, prnum: int) -> Iterator[str]:
+        url: Optional[str] = (
+            f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/pulls"
+            f"/{prnum}/files"
+        )
+        while url is not None:
+            r = self.session.get(url)
+            r.raise_for_status()
+            for entry in r.json():
+                if entry["status"] == "added":
+                    yield entry["filename"]
+            url = r.links.get("next", {}).get("url")
 
     def make_release_comments(self, release_tag: str, prnum: int) -> None:
         release_link = (

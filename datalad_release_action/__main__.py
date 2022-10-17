@@ -2,7 +2,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 import os
+from pathlib import Path
 import re
+import subprocess
+import sys
 from typing import IO
 import click
 from ghrepo import GHRepo
@@ -43,11 +46,54 @@ def main(ctx: click.Context, config: IO[str], repo: GHRepo) -> None:
 @click.argument("prnum", type=int)
 @click.pass_obj
 def add_changelog_snippet(dra: DRA, prnum: int) -> None:
-    pr = dra.client.get_pr_info(prnum)
-    dra.config.fragment_directory.mkdir(parents=True, exist_ok=True)
-    outfile = dra.config.fragment_directory / f"pr-{prnum}.md"
-    outfile.write_text(pr.as_snippet(dra.config))
-    log.info("Changelog snippet saved to %s", outfile)
+    fragdir = dra.config.fragment_directory
+    pr_snippet = fragdir / f"pr-{prnum}.md"
+    added_snippets = [
+        file
+        for file in map(Path, dra.client.get_pr_added_files(prnum))
+        if file.parent == fragdir and re.fullmatch(r".*[-_].*\.md", file.name)
+    ]
+    if len(added_snippets) == 0:
+        log.info("No pre-existing changelog snippets found in PR; generating one")
+        pr = dra.client.get_pr_info(prnum)
+        fragdir.mkdir(parents=True, exist_ok=True)
+        pr_snippet.write_text(pr.as_snippet(dra.config))
+        log.info("Changelog snippet saved to %s", pr_snippet)
+        subprocess.run(
+            [
+                "git",
+                "commit",
+                "-m",
+                f"[release-action] Autogenerate changelog snippet for PR {prnum}",
+                "--",
+                str(pr_snippet),
+            ],
+            check=True,
+        )
+    elif pr_snippet in added_snippets:
+        log.info("Changelog snippet %s already present; doing nothing", pr_snippet)
+    elif len(added_snippets) == 1:
+        log.info("Renaming changelog snippet %s to %s", added_snippets[0], pr_snippet)
+        added_snippets[0].rename(pr_snippet)
+        subprocess.run(
+            [
+                "git",
+                "commit",
+                "-m",
+                f"[release-action] Rename changelog snippet for PR {prnum}",
+                "--",
+                str(added_snippets[0]),
+                str(pr_snippet),
+            ],
+            check=True,
+        )
+    else:
+        log.error(
+            "Multiple changelog snippets found in PR, none of which is named %r: %s",
+            str(pr_snippet),
+            ", ".join(map(str, added_snippets)),
+        )
+        sys.exit(1)
 
 
 @main.command()
