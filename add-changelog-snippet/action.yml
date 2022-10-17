@@ -20,7 +20,7 @@ runs:
       with:
         python-version: '^3.7'
 
-    - name: Generate changelog.d snippet
+    - name: Generate or rename changelog snippet
       # We can't use nox or tox, as those change the working dir to the folder
       # containing the nox/tox-file, yet we need to remain in the same
       # directory in which the action was invoked.
@@ -38,6 +38,10 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
+        GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
+        GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
+        GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
         config: ${{ inputs.config }}
 
     - name: Remove labels
@@ -46,19 +50,8 @@ runs:
       with:
         labels: ${{ inputs.rm-labels }}
 
-    - name: Commit
-      run: |
-        git add changelog.d
-        if ! git diff --quiet --cached
-        then git commit -m 'Autogenerate changelog.d snippet for pull request'
-             git push origin HEAD:${{ github.head_ref }}
-        else echo "No changes to commit"
-        fi
+    - name: Push
+      run: git push origin HEAD:${{ github.head_ref }}
       shell: bash
-      env:
-        GIT_AUTHOR_NAME: ${{ inputs.git-author-name }}
-        GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
-        GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
-        GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
 
 # vim:set et sts=2:

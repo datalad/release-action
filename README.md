@@ -9,7 +9,8 @@ addition, the repository must contain a YAML configuration file (named
 the following keys:
 
 - `fragment_directory` — the path to scriv's fragment directory relative to the
-  directory in which the action is invoked; defaults to `changelog.d`
+  root of the repository (which must also be the directory in which the action
+  is invoked); defaults to `changelog.d`
 
 - `categories` — *(required)* a list of mappings describing the changelog
   categories used by the project; the mapping keys are:
@@ -30,6 +31,11 @@ the following keys:
 This action creates a `pr-PRNUM.md` file in the fragment directory for a pull
 request.  The pull request must be labelled with at least one changelog
 category label.
+
+If the PR already adds a file at the expected path, nothing is done.
+Otherwise, if the PR adds to the fragment directory exactly one file with a
+name of the form `*[-_]*.md`, that file is renamed to `pr-PRNUM.md`; if there
+are multiple such files, an error occurs.
 
 ## Usage
 
