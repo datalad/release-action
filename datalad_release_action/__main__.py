@@ -123,7 +123,8 @@ def release(dra: DRA) -> None:
     log.info("New version: %s", next_version)
     for pr in prs:
         dra.client.make_release_comments(next_version, pr.number)
-    print(f"::set-output name=new-version::{next_version}")
+    with open(os.environ["GITHUB_OUTPUT"], "a") as fp:
+        print(f"new-version={next_version}", file=fp)
 
 
 if __name__ == "__main__":
