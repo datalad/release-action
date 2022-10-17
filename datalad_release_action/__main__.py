@@ -59,14 +59,13 @@ def add_changelog_snippet(dra: DRA, prnum: int) -> None:
         fragdir.mkdir(parents=True, exist_ok=True)
         pr_snippet.write_text(pr.as_snippet(dra.config))
         log.info("Changelog snippet saved to %s", pr_snippet)
+        subprocess.run(["git", "add", "--", str(pr_snippet)], check=True)
         subprocess.run(
             [
                 "git",
                 "commit",
                 "-m",
                 f"[release-action] Autogenerate changelog snippet for PR {prnum}",
-                "--",
-                str(pr_snippet),
             ],
             check=True,
         )
@@ -74,16 +73,15 @@ def add_changelog_snippet(dra: DRA, prnum: int) -> None:
         log.info("Changelog snippet %s already present; doing nothing", pr_snippet)
     elif len(added_snippets) == 1:
         log.info("Renaming changelog snippet %s to %s", added_snippets[0], pr_snippet)
-        added_snippets[0].rename(pr_snippet)
+        subprocess.run(
+            ["git", "mv", "--", str(added_snippets[0]), str(pr_snippet)], check=True
+        )
         subprocess.run(
             [
                 "git",
                 "commit",
                 "-m",
                 f"[release-action] Rename changelog snippet for PR {prnum}",
-                "--",
-                str(added_snippets[0]),
-                str(pr_snippet),
             ],
             check=True,
         )
