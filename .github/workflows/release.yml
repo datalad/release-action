@@ -28,4 +28,3 @@ jobs:
         uses: ./release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag-prefix: v

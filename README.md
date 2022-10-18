@@ -12,6 +12,10 @@ the following keys:
   root of the repository (which must also be the directory in which the action
   is invoked); defaults to `changelog.d`
 
+- `tag-prefix` — string to prepend to the names of created tags and which all
+  previous versioned tags in the repository must begin with; defaults to the
+  empty string
+
 - `categories` — *(required)* a list of mappings describing the changelog
   categories used by the project; the mapping keys are:
     - `name` — *(required)* the category name as it will appear in changelog
@@ -42,6 +46,8 @@ An example configuration file:
 
 ```yaml
 fragment_directory: changelog.d
+
+tag-prefix: v
 
 categories:
   - name: 💥 Breaking Changes
@@ -169,9 +175,10 @@ This action prepares a release by performing the following:
   the form `pr-PRNUM.md` or `pr-PRNUM.rst` are inspected in order to determine
   the maximum version bump level.
 
-- The highest-versioned tag of the form `[v]N.N.N` (It is an error if there are
-  no such tags) is used as the previous release version, and it is bumped by
-  the version bump level to obtain the version for the new release.
+- The highest-versioned tag of the form `N.N.N` after stripping `tag-prefix`
+  (It is an error if there are no such tags) is used as the previous release
+  version, and it is bumped by the version bump level to obtain the version for
+  the new release.
 
 - A comment is made on all pull requests from step 1 and on the issues that
   they close mentioning the new release.
@@ -188,7 +195,9 @@ This action prepares a release by performing the following:
     - `GIT_AUTHOR_EMAIL` — same as the `git-author-email` input
     - `GIT_COMMITTER_NAME` — same as the `git-author-name` input
     - `GIT_COMMITTER_EMAIL` — same as the `git-author-email` input
-    - `new_version` — the version of the new release (without leading `v`)
+    - `new_version` — the version of the new release (without leading prefix)
+    - `new_tag` — the tag of the new release (i.e., `tag-prefix` plus
+      `new_version`)
 
 - The repository HEAD is tagged with an annotated tag named with the version of
   the new release prefixed with `tag-prefix`, the tag is pushed to GitHub, and
@@ -215,14 +224,14 @@ This action prepares a release by performing the following:
 | `git-author-name` | Name to use when committing | `DataLad Bot` |
 | `pre-tag` | A series of Bash commands to run after updating the changelog and before tagging | [empty] |
 | `pypi-token` | A token for uploading a project to PyPI; supplying this will cause the project to be built & uploaded as a Python project to PyPI | [empty] |
-| `tag-prefix` | String to prepend to the name of the created tag | [empty] |
 | `token` | GitHub token to use for interacting with the GitHub API; just using `${{ secrets.GITHUB_TOKEN }}` is recommended | *(required)* |
 
 ## Output
 
 | Key           | Meaning |
 | ------------- | ------- |
-| `new-version` | The version of the new release (without leading `v`) |
+| `new-tag`     | The tag of the new release (includes prefix) |
+| `new-version` | The version of the new release (without leading prefix) |
 
 ## Sample Workflow Usage
 

@@ -11,7 +11,8 @@ import click
 from ghrepo import GHRepo
 from .client import Client, PullRequest
 from .config import Config
-from .versions import Bump, bump_version, get_highest_tag_version
+from .util import strip_prefix
+from .versions import Bump, bump_version, get_highest_version_tag
 
 log = logging.getLogger(__name__)
 
@@ -115,14 +116,19 @@ def release(dra: DRA) -> None:
             else:
                 log.warning("Cannot extract PR number from path %r", str(p))
     log.info("Version bump level for this release: %s", bump.value)
-    prev_version = get_highest_tag_version()
+    prev_tag = get_highest_version_tag(dra.config.tag_prefix)
+    log.info("Previous released tag: %s", prev_tag)
+    prev_version = strip_prefix(prefix=dra.config.tag_prefix, s=prev_tag)
     log.info("Previous released version: %s", prev_version)
     next_version = bump_version(prev_version, bump)
     log.info("New version: %s", next_version)
+    next_tag = f"{dra.config.tag_prefix}{next_version}"
+    log.info("New tag: %s", next_tag)
     for pr in prs:
-        dra.client.make_release_comments(next_version, pr.number)
+        dra.client.make_release_comments(next_tag, pr.number)
     with open(os.environ["GITHUB_OUTPUT"], "a") as fp:
         print(f"new-version={next_version}", file=fp)
+        print(f"new-tag={next_tag}", file=fp)
 
 
 @main.command()

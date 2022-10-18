@@ -4,6 +4,7 @@ from functools import total_ordering
 import re
 import subprocess
 from typing import Optional
+from .util import strip_prefix
 
 
 @total_ordering
@@ -68,17 +69,15 @@ def bump_version(v: str, bump: Bump) -> str:
     '1.2.4'
     >>> bump_version("1.2.3.4", Bump.PATCH)
     '1.2.4.0'
-    >>> bump_version("v1.2.3", Bump.PATCH)
-    '1.2.4'
     """
-    parts = [int(p) for p in v.lstrip("v").split(".")]
+    parts = [int(p) for p in v.split(".")]
     vs = parts + [0] * (bump.level + 1 - len(parts))
     vs[bump.level] += 1
     vs[bump.level + 1 :] = [0] * len(vs[bump.level + 1 :])
     return ".".join(map(str, vs))
 
 
-def get_highest_tag_version() -> str:
+def get_highest_version_tag(tag_prefix: str) -> str:
     r = subprocess.run(
         ["git", "tag", "-l", "--merged", "HEAD"],
         stdout=subprocess.PIPE,
@@ -89,10 +88,13 @@ def get_highest_tag_version() -> str:
     max_tag: Optional[str] = None
     for tag in r.stdout.splitlines():
         tag = tag.rstrip("\n")
-        if re.fullmatch(r"v?\d+(?:\.\d+)*", tag):
-            v = tuple(map(int, tag.lstrip("v").split(".")))
+        stripped_tag = strip_prefix(prefix=tag_prefix, s=tag)
+        if re.fullmatch(r"\d+(?:\.\d+)*", stripped_tag):
+            v = tuple(map(int, stripped_tag.split(".")))
             if max_version is None or v > max_version:
                 max_tag = tag
     if max_tag is None:
-        raise RuntimeError("Repository does not have any tags of the form N.N.N")
+        raise RuntimeError(
+            f"Repository does not have any tags of the form {tag_prefix}N.N.N"
+        )
     return max_tag
