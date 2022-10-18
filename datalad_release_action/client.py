@@ -8,7 +8,7 @@ import sys
 from typing import Any, Optional
 from ghrepo import GHRepo
 import requests
-from .config import Config
+from .config import Config, Label
 from .versions import Bump
 
 log = logging.getLogger(__name__)
@@ -79,6 +79,16 @@ class Client:
     def __exit__(self, *_exc: Any) -> None:
         self.session.close()
 
+    def paginate(self, url: str) -> Iterator:
+        while True:
+            r = self.session.get(url)
+            r.raise_for_status()
+            yield from r.json()
+            url2 = r.links.get("next", {}).get("url")
+            if url2 is None:
+                return
+            url = url2
+
     def get_pr_info(self, prnum: int) -> PullRequest:
         variables = {
             "repo_owner": self.repo.owner,
@@ -123,17 +133,12 @@ class Client:
                 )
 
     def get_pr_added_files(self, prnum: int) -> Iterator[str]:
-        url: Optional[str] = (
+        for entry in self.paginate(
             f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/pulls"
             f"/{prnum}/files"
-        )
-        while url is not None:
-            r = self.session.get(url)
-            r.raise_for_status()
-            for entry in r.json():
-                if entry["status"] == "added":
-                    yield entry["filename"]
-            url = r.links.get("next", {}).get("url")
+        ):
+            if entry["status"] == "added":
+                yield entry["filename"]
 
     def make_release_comments(self, release_tag: str, prnum: int) -> None:
         release_link = (
@@ -154,6 +159,17 @@ class Client:
             headers={"Accept": "application/vnd.github+json"},
         )
         r.raise_for_status()
+
+    def get_label_maker(self) -> LabelMaker:
+        log.info("Fetching current labels for %s ...", self.repo)
+        labels: dict[str, LabelProperties] = {}
+        for lbl in self.paginate(
+            f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/labels"
+        ):
+            labels[lbl["name"]] = LabelProperties(
+                color=lbl["color"], description=lbl["description"]
+            )
+        return LabelMaker(client=self, labels=labels)
 
 
 @dataclass
@@ -213,3 +229,54 @@ class PullRequest:
             )
         item += f"{self.as_link()} (by {self.author.as_link()})"
         return f"### {self.category(cfg)}\n\n{item}\n"
+
+
+@dataclass
+class LabelMaker:
+    client: Client
+    labels: dict[str, LabelProperties]
+
+    @property
+    def label_url(self) -> str:
+        return (
+            f"{GITHUB_API_URL}/repos/{self.client.repo.owner}"
+            f"/{self.client.repo.name}/labels"
+        )
+
+    def ensure(self, label: Label) -> None:
+        payload: dict[str, Optional[str]] = {}
+        try:
+            extant = self.labels[label.name]
+        except KeyError:
+            log.info("Creating label %r", label.name)
+            payload = {"name": label.name}
+            if label.color is not None:
+                payload["color"] = label.color
+            if label.description is not None:
+                payload["description"] = label.description
+            r = self.client.session.post(self.label_url, json=payload)
+            r.raise_for_status()
+            data = r.json()
+            self.labels[label.name] = LabelProperties(
+                color=data["color"], description=data["description"]
+            )
+        else:
+            if label.color is not None and label.color.lower() != extant.color.lower():
+                payload["color"] = label.color
+                extant.color = label.color
+            if (label.description or "") != (extant.description or ""):
+                payload["description"] = label.description
+                extant.description = label.description
+            if payload:
+                log.info(
+                    "Updating %s for label %r", ", ".join(payload.keys()), label.name
+                )
+            self.client.session.patch(
+                f"{self.label_url}/{label.name}", json=payload
+            ).raise_for_status()
+
+
+@dataclass
+class LabelProperties:
+    color: str
+    description: Optional[str]

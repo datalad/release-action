@@ -125,5 +125,17 @@ def release(dra: DRA) -> None:
         print(f"new-version={next_version}", file=fp)
 
 
+@main.command()
+@click.pass_obj
+def create_labels(dra: DRA) -> None:
+    label_maker = dra.client.get_label_maker()
+    for cat in dra.config.categories:
+        label = cat.get_label()
+        if label is not None:
+            label_maker.ensure(label)
+    for label in dra.config.extra_labels:
+        label_maker.ensure(label)
+
+
 if __name__ == "__main__":
     main()
