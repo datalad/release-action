@@ -25,6 +25,32 @@ the following keys:
       label is included in a release; can be `major`, `minor`, or `patch`
       (default)
 
+An example configuration file:
+
+```yaml
+fragment_directory: changelog.d
+
+categories:
+  - name: 💥 Breaking Changes
+    bump: major
+    label: major
+  - name: 🚀 Enhancements and New Features
+    bump: minor
+    label: minor
+  - name: 🐛 Bug Fixes
+    label: patch
+  - name: 🔩 Dependencies
+    label: dependencies
+  - name: 📝 Documentation
+    label: documentation
+  - name: 🏠 Internal
+    label: internal
+  - name: 🏎 Performance
+    label: performance
+  - name: 🧪 Tests
+    label: tests
+```
+
 
 # Action: `add-changelog-snippet`
 
@@ -128,7 +154,7 @@ This action prepares a release by performing the following:
     - `new_version` — the version of the new release (without leading `v`)
 
 - The repository HEAD is tagged with an annotated tag named with the version of
-  the new release (without a leading `v`), the tag is pushed to GitHub, and
+  the new release prefixed with `tag-prefix`, the tag is pushed to GitHub, and
   `scriv github-release` is run.
 
 - If the `pypi-token` input is not empty, then `python -m build` is run,
@@ -152,6 +178,7 @@ This action prepares a release by performing the following:
 | `git-author-name` | Name to use when committing | `DataLad Bot` |
 | `pre-tag` | A series of Bash commands to run after updating the changelog and before tagging | [empty] |
 | `pypi-token` | A token for uploading a project to PyPI; supplying this will cause the project to be built & uploaded as a Python project to PyPI | [empty] |
+| `tag-prefix` | String to prepend to the name of the created tag | [empty] |
 | `token` | GitHub token to use for interacting with the GitHub API; just using `${{ secrets.GITHUB_TOKEN }}` is recommended | *(required)* |
 
 ## Output

@@ -13,6 +13,8 @@ inputs:
     default: ""
   config:
     default: ".datalad-release-action.yaml"
+  tag-prefix:
+    default: ""
 
 outputs:
   new-version:
@@ -54,7 +56,7 @@ runs:
     - name: Create new CHANGELOG section
       run: |
         source "$GITHUB_ACTION_PATH"/infra/bin/activate
-        scriv collect --add --version ${{ steps.new-version.outputs.new-version }}
+        scriv collect --add --version "$tag_prefix${{ steps.new-version.outputs.new-version }}"
         git commit -m '[skip ci] Update CHANGELOG'
       shell: bash
       env:
@@ -62,6 +64,7 @@ runs:
         GIT_AUTHOR_EMAIL: ${{ inputs.git-author-email }}
         GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
         GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
+        tag_prefix: ${{ inputs.tag-prefix }}
 
     - name: Run custom pre-tag step
       if: inputs.pre-tag != ''
@@ -77,7 +80,7 @@ runs:
 
     - name: Create tag and release
       run: |
-        git tag -m "Update version to $new_version" "$new_version"
+        git tag -m "Update version to $new_version" "$tag_prefix$new_version"
         git push --follow-tags
         source "$GITHUB_ACTION_PATH"/infra/bin/activate
         scriv github-release
@@ -89,6 +92,7 @@ runs:
         GIT_COMMITTER_NAME: ${{ inputs.git-author-name }}
         GIT_COMMITTER_EMAIL: ${{ inputs.git-author-email }}
         new_version: ${{ steps.new-version.outputs.new-version }}
+        tag_prefix: ${{ inputs.tag-prefix }}
 
     - name: Build and upload to PyPI
       if: inputs.pypi-token != ''
