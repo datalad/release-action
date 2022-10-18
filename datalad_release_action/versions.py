@@ -68,8 +68,10 @@ def bump_version(v: str, bump: Bump) -> str:
     '1.2.4'
     >>> bump_version("1.2.3.4", Bump.PATCH)
     '1.2.4.0'
+    >>> bump_version("v1.2.3", Bump.PATCH)
+    '1.2.4'
     """
-    parts = [int(p) for p in v.split(".")]
+    parts = [int(p) for p in v.lstrip("v").split(".")]
     vs = parts + [0] * (bump.level + 1 - len(parts))
     vs[bump.level] += 1
     vs[bump.level + 1 :] = [0] * len(vs[bump.level + 1 :])
