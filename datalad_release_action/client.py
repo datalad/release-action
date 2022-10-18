@@ -271,9 +271,11 @@ class LabelMaker:
                 log.info(
                     "Updating %s for label %r", ", ".join(payload.keys()), label.name
                 )
-            self.client.session.patch(
-                f"{self.label_url}/{label.name}", json=payload
-            ).raise_for_status()
+                self.client.session.patch(
+                    f"{self.label_url}/{label.name}", json=payload
+                ).raise_for_status()
+            else:
+                log.info("Label %r is up to date; not modifying", label.name)
 
 
 @dataclass

@@ -21,9 +21,22 @@ the following keys:
       placed under the given category by the `add-changelog-snippet` action.
       If a pull request has multiple category labels, the first matching
       category listed in the config file is used.
+    - `label-color` — the color for the GitHub label, as a six-digit
+      hexadecimal string (case insensitive) without a leading '#'; this color
+      will be used when the label is added or updated via the "labels" command
+    - `label-description` — the description for the GitHub label; this
+      description will be used when the label is added or updated via the
+      "labels" command
     - `bump` — the version bump level to use when a PR with the associated
       label is included in a release; can be `major`, `minor`, or `patch`
       (default)
+
+- `extra-labels` — a list of mappings describing additional labels for the
+  "labels" command to create or update; the mapping keys are:
+    - `name` *(required)*
+    - `color` — a six-digit hexadecimal string (case insensitive) without a
+      leading '#'
+    - `description`
 
 An example configuration file:
 
@@ -34,21 +47,45 @@ categories:
   - name: 💥 Breaking Changes
     bump: major
     label: major
+    label-color: C5000B
+    label-description: Increment the major version when merged
   - name: 🚀 Enhancements and New Features
     bump: minor
     label: minor
+    label-color: F1A60E
+    label-description: Increment the minor version when merged
   - name: 🐛 Bug Fixes
     label: patch
+    label-color: "870048"
+    label-description: Increment the patch version when merged
   - name: 🔩 Dependencies
     label: dependencies
+    label-color: 8732bc
+    label-description: Update one or more dependencies' versions
   - name: 📝 Documentation
     label: documentation
+    label-color: cfd3d7
+    label-description: Changes only affect the documentation
   - name: 🏠 Internal
     label: internal
+    label-color: "696969"
+    label-description: Changes only affect the internal API
   - name: 🏎 Performance
     label: performance
+    label-color: f4b2d8
+    label-description: Improve performance of an existing feature
   - name: 🧪 Tests
     label: tests
+    label-color: ffd3cc
+    label-description: Add or improve existing tests
+
+extra-labels:
+  - name: release
+    color: 007f70
+    description: Create a release when this pr is merged
+  - name: CHANGELOG-missing
+    color: 5B0406
+    description: When a PR does not contain add a changelog item, yet
 ```
 
 
@@ -221,3 +258,20 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+
+# Command: `labels`
+
+This repository also provides a command for creating or updating the GitHub
+labels used by the actions and their workflows in a repository.  The
+recommended way to invoke this command is via
+[nox](https://pypi.org/project/nox/); after installing nox, the "labels"
+command can be invoked by running the following in a clone of this repository:
+
+    GITHUB_TOKEN=... nox -e labels -- repo-owner/repo-name path/to/config/file
+
+where `GITHUB_TOKEN` is set to a GitHub API token with permission to modify
+labels in the desired repository, `repo-owner/repo-name` is replaced with the
+owner & name of the GitHub repository whose labels you want to update, and
+`path/to/coonfig/file` is a path to a `.datalad-release-action.yaml`
+configuration file for the desired repository.

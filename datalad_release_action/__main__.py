@@ -127,7 +127,7 @@ def release(dra: DRA) -> None:
 
 @main.command()
 @click.pass_obj
-def create_labels(dra: DRA) -> None:
+def labels(dra: DRA) -> None:
     label_maker = dra.client.get_label_maker()
     for cat in dra.config.categories:
         label = cat.get_label()
