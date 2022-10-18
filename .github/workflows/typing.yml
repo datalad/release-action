@@ -1,0 +1,23 @@
+name: Type-check
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  typing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
+
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade nox
+
+      - name: Run generic tests
+        run: nox -e typing

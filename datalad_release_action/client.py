@@ -87,7 +87,7 @@ class Client:
             "closing_cursor": None,
             "label_cursor": None,
         }
-        closed_issues: list[str] = []
+        closed_issues: list[Issue] = []
         labels: set[str] = set()
         # We need to loop in order to get all pages of closed issues & labels.
         # The other PR details will be the same in every response, so we just
