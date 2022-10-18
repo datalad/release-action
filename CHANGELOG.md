@@ -1,6 +1,6 @@
 
 <a id='changelog-.1.0'></a>
-# .1.0 (2022-10-18)
+# v0.1.0 (2022-10-18)
 
 ## 🚀 Enhancements and New Features
 
