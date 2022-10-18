@@ -8,7 +8,7 @@ addition, the repository must contain a YAML configuration file (named
 "`.datalad-release-action.yaml`" by default) for use by the actions containing
 the following keys:
 
-- `fragment_directory` — the path to scriv's fragment directory relative to the
+- `fragment-directory` — the path to scriv's fragment directory relative to the
   root of the repository (which must also be the directory in which the action
   is invoked); defaults to `changelog.d`
 
@@ -45,7 +45,7 @@ the following keys:
 An example configuration file:
 
 ```yaml
-fragment_directory: changelog.d
+fragment-directory: changelog.d
 
 tag-prefix: v
 

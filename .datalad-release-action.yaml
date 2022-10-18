@@ -1,4 +1,4 @@
-fragment_directory: changelog.d
+fragment-directory: changelog.d
 
 tag-prefix: v
 
