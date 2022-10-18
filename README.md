@@ -275,3 +275,10 @@ labels in the desired repository, `repo-owner/repo-name` is replaced with the
 owner & name of the GitHub repository whose labels you want to update, and
 `path/to/coonfig/file` is a path to a `.datalad-release-action.yaml`
 configuration file for the desired repository.
+
+
+# Command: `populate-workflows.sh`
+
+This repository also includes a shell script, `populate-workflows.sh`, for
+automatically creating or updating the sample workflows shown above in a
+repository.  Run it with `./populate-workflows.sh path/to/local/repo/clone`.
