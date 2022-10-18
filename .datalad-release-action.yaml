@@ -1,5 +1,7 @@
 fragment_directory: changelog.d
 
+tag-prefix: v
+
 categories:
   - name: 💥 Breaking Changes
     bump: major

@@ -36,6 +36,7 @@ class Config(BaseModel):
     fragment_directory: Path = Path("changelog.d")
     categories: List[Category]
     extra_labels: List[Label] = Field(default_factory=list, alias="extra-labels")
+    tag_prefix: str = Field("", alias="tag-prefix")
 
     @classmethod
     def load_yaml(cls, infile: IO[str]) -> Config:
