@@ -1,6 +1,7 @@
 #!/bin/bash
 set -ex
 cd "${1:?Usage: $0 repo-dir}"
+test -e .git
 mkdir -p .github/workflows
 
 cat > add-changelog-snippet.yml <<'EOT'
