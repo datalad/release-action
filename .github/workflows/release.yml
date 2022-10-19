@@ -25,6 +25,16 @@ jobs:
           fetch-depth: 0
 
       - name: Prepare release
+        id: new-version
         uses: ./release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update major version branch
+        run: |
+          set -ex
+          v="${new_tag%%.*}"
+          git update-ref refs/heads/"$v"
+          git push origin "$v"
+        env:
+          new_tag: ${{ steps.new-version.outputs.new-tag }}
