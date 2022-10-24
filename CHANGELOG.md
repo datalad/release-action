@@ -1,4 +1,27 @@
 
+<a id='changelog-v1.0.0'></a>
+# v1.0.0 (2022-10-24)
+
+## 💥 Breaking Changes
+
+- Improve handling of `tag-prefix` (now a config file option).  Fixes [#22](https://github.com/datalad/release-action/issues/22) via [PR #23](https://github.com/datalad/release-action/pull/23) (by [@jwodder](https://github.com/jwodder))
+
+- Rename `fragment_directory` option to `fragment-directory`.  [PR #24](https://github.com/datalad/release-action/pull/24) (by [@jwodder](https://github.com/jwodder))
+
+## 🚀 Enhancements and New Features
+
+- Add `populate-workflows.sh` script.  Fixes [#14](https://github.com/datalad/release-action/issues/14) via [PR #17](https://github.com/datalad/release-action/pull/17) (by [@jwodder](https://github.com/jwodder))
+
+## 📝 Documentation
+
+- Make @GITHUBHANDLE into proper markdown hyperref.  [PR #26](https://github.com/datalad/release-action/pull/26) (by [@yarikoptic](https://github.com/yarikoptic))
+
+- Make sample actions & workflows use `@v1`.  Fixes [#27](https://github.com/datalad/release-action/issues/27) via [PR #29](https://github.com/datalad/release-action/pull/29) (by [@jwodder](https://github.com/jwodder))
+
+## 🏠 Internal
+
+- Properly update major version branch.  Fixes [#21](https://github.com/datalad/release-action/issues/21) via [PR #25](https://github.com/datalad/release-action/pull/25) (by [@jwodder](https://github.com/jwodder))
+
 <a id='changelog-.1.0'></a>
 # .1.0 (2022-10-18)
 
