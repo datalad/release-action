@@ -34,7 +34,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Add changelog snippet
-        uses: datalad/release-action/add-changelog-snippet@master
+        uses: datalad/release-action/add-changelog-snippet@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           rm-labels: CHANGELOG-missing
@@ -68,7 +68,7 @@ jobs:
           fetch-depth: 0
 
       - name: Prepare release
-        uses: datalad/release-action/release@master
+        uses: datalad/release-action/release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 EOT
