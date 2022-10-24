@@ -34,7 +34,7 @@ jobs:
         run: |
           set -ex
           v="${new_tag%%.*}"
-          git update-ref refs/heads/"$v"
+          git update-ref refs/heads/"$v" HEAD
           git push origin "$v"
         env:
           new_tag: ${{ steps.new-version.outputs.new-tag }}
