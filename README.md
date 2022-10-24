@@ -110,7 +110,7 @@ are multiple such files, an error occurs.
 
 ```yaml
 - name: Add changelog snippet
-  uses: datalad/release-action/add-changelog-snippet@master
+  uses: datalad/release-action/add-changelog-snippet@v1
   with:
     # See "Inputs" below
 ```
@@ -160,7 +160,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Add changelog snippet
-        uses: datalad/release-action/add-changelog-snippet@master
+        uses: datalad/release-action/add-changelog-snippet@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           rm-labels: CHANGELOG-missing
@@ -210,7 +210,7 @@ This action prepares a release by performing the following:
 
 ```yaml
 - name: Add changelog snippet
-  uses: datalad/release-action/release@master
+  uses: datalad/release-action/release@v1
   with:
     # See "Inputs" below
 ```
@@ -263,7 +263,7 @@ jobs:
           fetch-depth: 0
 
       - name: Prepare release
-        uses: datalad/release-action/release@master
+        uses: datalad/release-action/release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
