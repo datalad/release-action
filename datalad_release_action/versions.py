@@ -3,7 +3,7 @@ from enum import Enum
 from functools import total_ordering
 import re
 import subprocess
-from typing import Optional
+from typing import Iterable, Optional
 from .util import strip_prefix
 
 
@@ -84,15 +84,31 @@ def get_highest_version_tag(tag_prefix: str) -> str:
         text=True,
         check=True,
     )
+    return highest_version_tag(tag_prefix, r.stdout.splitlines(keepends=False))
+
+
+def highest_version_tag(tag_prefix: str, tags: Iterable[str]) -> str:
+    """
+    >>> highest_version_tag("", ["0.17.8", "0.9.3"])
+    '0.17.8'
+    >>> highest_version_tag("v", ["v0.17.8", "v0.9.3"])
+    'v0.17.8'
+    >>> highest_version_tag("v", ["0.17.8", "v0.9.3"])
+    '0.17.8'
+    >>> highest_version_tag("", ["0.17.8", "0.17.9rc1"])
+    '0.17.8'
+    >>> highest_version_tag("", ["0.17.8", "0.17.9.1"])
+    '0.17.9.1'
+    """
     max_version: Optional[tuple[int, ...]] = None
     max_tag: Optional[str] = None
-    for tag in r.stdout.splitlines():
-        tag = tag.rstrip("\n")
+    for tag in tags:
         stripped_tag = strip_prefix(prefix=tag_prefix, s=tag)
         if re.fullmatch(r"\d+(?:\.\d+)*", stripped_tag):
             v = tuple(map(int, stripped_tag.split(".")))
             if max_version is None or v > max_version:
                 max_tag = tag
+                max_version = v
     if max_tag is None:
         raise RuntimeError(
             f"Repository does not have any tags of the form {tag_prefix}N.N.N"
