@@ -93,6 +93,7 @@ def get_highest_version_tag(tag_prefix: str) -> str:
             v = tuple(map(int, stripped_tag.split(".")))
             if max_version is None or v > max_version:
                 max_tag = tag
+                max_version = v
     if max_tag is None:
         raise RuntimeError(
             f"Repository does not have any tags of the form {tag_prefix}N.N.N"
