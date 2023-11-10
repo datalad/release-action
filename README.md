@@ -144,7 +144,7 @@ on:
 # Prevent the workflow from running multiple jobs at once when a PR is created
 # with multiple labels:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.label }}
   cancel-in-progress: true
 
 jobs:
