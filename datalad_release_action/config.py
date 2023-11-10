@@ -11,7 +11,7 @@ class Category(BaseModel):
     bump: Bump = Bump.PATCH
     label: Optional[str] = None
     label_color: Optional[str] = Field(
-        None, alias="label-color", regex=r"^[0-9A-Fa-f]{6}$"
+        None, alias="label-color", pattern=r"^[0-9A-Fa-f]{6}$"
     )
     label_description: Optional[str] = Field(None, alias="label-description")
 
@@ -28,7 +28,7 @@ class Category(BaseModel):
 
 class Label(BaseModel):
     name: str
-    color: Optional[str] = Field(None, regex=r"^[0-9A-Fa-f]{6}$")
+    color: Optional[str] = Field(None, pattern=r"^[0-9A-Fa-f]{6}$")
     description: Optional[str] = None
 
 
@@ -40,4 +40,4 @@ class Config(BaseModel):
 
     @classmethod
     def load_yaml(cls, infile: IO[str]) -> Config:
-        return cls.parse_obj(YAML(typ="safe").load(infile))
+        return cls.model_validate(YAML(typ="safe").load(infile))
