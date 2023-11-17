@@ -6,14 +6,13 @@ import logging
 import os
 import sys
 from typing import Any, Optional
+from urllib.parse import quote
 from ghrepo import GHRepo
-import requests
+import ghreq
 from .config import Config, Label
 from .versions import Bump
 
 log = logging.getLogger(__name__)
-
-GITHUB_API_URL = os.environ.get("GITHUB_API_URL", "https://api.github.com")
 
 GRAPHQL_API_URL = os.environ.get("GITHUB_GRAPHQL_URL", "https://api.github.com/graphql")
 
@@ -67,27 +66,35 @@ PR_INFO_QUERY = (
 class Client:
     repo: GHRepo
     token: InitVar[str]
-    session: requests.Session = field(init=False)
+    rest: ghreq.Client = field(init=False)
+    graphql: ghreq.Client = field(init=False)
+    repo_ep: ghreq.Endpoint = field(init=False)
 
     def __post_init__(self, token: str) -> None:
-        self.session = requests.Session()
-        self.session.headers["Authorization"] = f"bearer {token}"
+        user_agent = ghreq.make_user_agent(
+            "datalad-release-action", url="https://github.com/datalad/release-action"
+        )
+        self.rest = ghreq.Client(
+            token=token, user_agent=user_agent, api_url=ghreq.get_github_api_url()
+        )
+        self.repo_ep = self.rest / "repos" / self.repo.owner / self.repo.name
+        # Set the "mutation delay" to zero for GraphQL, as ghreq applies the
+        # delay to all POST requests, which GraphQL exclusively uses, but all
+        # our GraphQL POSTs are actually queries, not mutations.
+        self.graphql = ghreq.Client(
+            token=token,
+            user_agent=user_agent,
+            mutation_delay=0,
+            accept=None,
+            api_version=None,
+        )
 
     def __enter__(self) -> Client:
         return self
 
     def __exit__(self, *_exc: Any) -> None:
-        self.session.close()
-
-    def paginate(self, url: str) -> Iterator:
-        while True:
-            r = self.session.get(url)
-            r.raise_for_status()
-            yield from r.json()
-            url2 = r.links.get("next", {}).get("url")
-            if url2 is None:
-                return
-            url = url2
+        self.rest.close()
+        self.graphql.close()
 
     def get_pr_info(self, prnum: int) -> PullRequest:
         variables = {
@@ -103,11 +110,9 @@ class Client:
         # The other PR details will be the same in every response, so we just
         # grab the last set of details once the pagination is done.
         while True:
-            r = self.session.post(
+            resp = self.graphql.post(
                 GRAPHQL_API_URL, json={"query": PR_INFO_QUERY, "variables": variables}
             )
-            r.raise_for_status()
-            resp = r.json()
             if resp.get("errors"):
                 sys.exit(
                     "GraphQL API Error:\n" + json.dumps(resp, sort_keys=True, indent=4)
@@ -133,10 +138,7 @@ class Client:
                 )
 
     def get_pr_added_files(self, prnum: int) -> Iterator[str]:
-        for entry in self.paginate(
-            f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/pulls"
-            f"/{prnum}/files"
-        ):
+        for entry in (self.repo_ep / "pulls" / str(prnum) / "files").paginate():
             if entry["status"] == "added":
                 yield entry["filename"]
 
@@ -153,19 +155,12 @@ class Client:
             self.comment_on_issueoid(issue.number, f"Issue fixed in {release_link}")
 
     def comment_on_issueoid(self, num: int, body: str) -> None:
-        r = self.session.post(
-            f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/issues/{num}/comments",
-            json={"body": body},
-            headers={"Accept": "application/vnd.github+json"},
-        )
-        r.raise_for_status()
+        (self.repo_ep / "issues" / str(num) / "comments").post(json={"body": body})
 
     def get_label_maker(self) -> LabelMaker:
         log.info("Fetching current labels for %s ...", self.repo)
         labels: dict[str, LabelProperties] = {}
-        for lbl in self.paginate(
-            f"{GITHUB_API_URL}/repos/{self.repo.owner}/{self.repo.name}/labels"
-        ):
+        for lbl in (self.repo_ep / "labels").paginate():
             labels[lbl["name"]] = LabelProperties(
                 color=lbl["color"], description=lbl["description"]
             )
@@ -237,11 +232,8 @@ class LabelMaker:
     labels: dict[str, LabelProperties]
 
     @property
-    def label_url(self) -> str:
-        return (
-            f"{GITHUB_API_URL}/repos/{self.client.repo.owner}"
-            f"/{self.client.repo.name}/labels"
-        )
+    def label_ep(self) -> ghreq.Endpoint:
+        return self.client.repo_ep / "labels"
 
     def ensure(self, label: Label) -> None:
         payload: dict[str, Optional[str]] = {}
@@ -254,9 +246,7 @@ class LabelMaker:
                 payload["color"] = label.color
             if label.description is not None:
                 payload["description"] = label.description
-            r = self.client.session.post(self.label_url, json=payload)
-            r.raise_for_status()
-            data = r.json()
+            data = self.label_ep.post(json=payload)
             self.labels[label.name] = LabelProperties(
                 color=data["color"], description=data["description"]
             )
@@ -271,9 +261,7 @@ class LabelMaker:
                 log.info(
                     "Updating %s for label %r", ", ".join(payload.keys()), label.name
                 )
-                self.client.session.patch(
-                    f"{self.label_url}/{label.name}", json=payload
-                ).raise_for_status()
+                (self.label_ep / quote(label.name)).patch(json=payload)
             else:
                 log.info("Label %r is up to date; not modifying", label.name)
 
