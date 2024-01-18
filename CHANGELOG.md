@@ -1,4 +1,29 @@
 
+<a id='changelog-v1.0.2'></a>
+# v1.0.2 (2024-01-18)
+
+## 🐛 Bug Fixes
+
+- Update `actions/checkout` version in workflow created by `populate-workflows.sh`.  [PR #40](https://github.com/datalad/release-action/pull/40) (by [@jwodder](https://github.com/jwodder))
+
+- Fix the concurrency label for the `add-changelog-snippet` workflow.  [PR #42](https://github.com/datalad/release-action/pull/42) (by [@jwodder](https://github.com/jwodder))
+
+## 🔩 Dependencies
+
+- Update for Pydantic 2.0.  [PR #41](https://github.com/datalad/release-action/pull/41) (by [@jwodder](https://github.com/jwodder))
+
+- Use [`ghreq`](https://github.com/jwodder/ghreq).  [PR #46](https://github.com/datalad/release-action/pull/46) (by [@jwodder](https://github.com/jwodder))
+
+## 🏠 Internal
+
+- Use Dependabot to update GitHub Actions versions.  [PR #39](https://github.com/datalad/release-action/pull/39) (by [@jwodder](https://github.com/jwodder))
+
+- Run `pre-commit autoupdate`.  Fixes [#49](https://github.com/datalad/release-action/issues/49) via [PR #50](https://github.com/datalad/release-action/pull/50) (by [@jwodder](https://github.com/jwodder))
+
+## 🧪 Tests
+
+- mypy: Set `ignore_missing_imports = False`.  [PR #45](https://github.com/datalad/release-action/pull/45) (by [@jwodder](https://github.com/jwodder))
+
 <a id='changelog-v1.0.1'></a>
 # v1.0.1 (2022-11-07)
 
