@@ -175,10 +175,11 @@ This action prepares a release by performing the following:
   the form `pr-PRNUM.md` or `pr-PRNUM.rst` are inspected in order to determine
   the maximum version bump level.
 
-- The highest-versioned tag of the form `N.N.N` after stripping `tag-prefix`
-  (It is an error if there are no such tags) is used as the previous release
-  version, and it is bumped by the version bump level to obtain the version for
-  the new release.
+- The highest-versioned tag that is of the form `N.N.N` after stripping
+  `tag-prefix` (It is an error if there is no such tag or if there have been no
+  commits to the repository's default branch since the highest tag) is used as
+  the previous release version, and it is bumped by the version bump level to
+  obtain the version for the new release.
 
 - A comment is made on all pull requests from step 1 and on the issues that
   they close mentioning the new release.

@@ -12,7 +12,7 @@ from ghrepo import GHRepo
 from .client import Client, PullRequest
 from .config import Config
 from .util import strip_prefix
-from .versions import Bump, bump_version, get_highest_version_tag
+from .versions import Bump, bump_version, commits_since_tag, get_highest_version_tag
 
 log = logging.getLogger(__name__)
 
@@ -118,6 +118,8 @@ def release(dra: DRA) -> None:
     log.info("Version bump level for this release: %s", bump.value)
     prev_tag = get_highest_version_tag(dra.config.tag_prefix)
     log.info("Previous released tag: %s", prev_tag)
+    if commits_since_tag(prev_tag) == 0:
+        raise click.UsageError(f"No commits made since previous tag {prev_tag}")
     prev_version = strip_prefix(prefix=dra.config.tag_prefix, s=prev_tag)
     log.info("Previous released version: %s", prev_version)
     next_version = bump_version(prev_version, bump)

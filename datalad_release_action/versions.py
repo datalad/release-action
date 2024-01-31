@@ -114,3 +114,13 @@ def highest_version_tag(tag_prefix: str, tags: Iterable[str]) -> str:
             f"Repository does not have any tags of the form {tag_prefix}N.N.N"
         )
     return max_tag
+
+
+def commits_since_tag(tag: str) -> int:
+    r = subprocess.run(
+        ["git", "rev-list", "--count", f"{tag}.."],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+    return int(r.stdout.strip())
