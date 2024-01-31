@@ -1,4 +1,11 @@
 
+<a id='changelog-v1.1.0'></a>
+# v1.1.0 (2024-01-31)
+
+## 🚀 Enhancements and New Features
+
+- Describe triggering releases via `workflow_dispatch`; error on release if no commits since last tag.  Fixes [#34](https://github.com/datalad/release-action/issues/34) via [PR #51](https://github.com/datalad/release-action/pull/51) (by [@jwodder](https://github.com/jwodder))
+
 <a id='changelog-v1.0.2'></a>
 # v1.0.2 (2024-01-18)
 
