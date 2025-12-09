@@ -33,7 +33,7 @@ class Label(BaseModel):
 
 
 class Config(BaseModel):
-    fragment_directory: Path = Path("changelog.d", alias="fragment-directory")
+    fragment_directory: Path = Field(Path("changelog.d"), alias="fragment-directory")
     categories: List[Category]
     extra_labels: List[Label] = Field(default_factory=list, alias="extra-labels")
     tag_prefix: str = Field("", alias="tag-prefix")
