@@ -1,4 +1,12 @@
 
+<a id='changelog-v1.2.0'></a>
+# v1.2.0 (2025-12-09)
+
+## 🚀 Enhancements and New Features
+
+- Stop using and supporting EOLed python 3.8 (and 3.9) and use/support 3.13 and 3.13 instead.  [PR #56](https://github.com/datalad/release-action/pull/56) (by [@yarikoptic](https://github.com/yarikoptic))
+- Fixed for compatibility with more recent pydantic, fixing TypeError and wrapping Path default in Field() for alias support.
+
 <a id='changelog-v1.1.0'></a>
 # v1.1.0 (2024-01-31)
 
